@@ -24,9 +24,9 @@ def ssh(host, cmd):
     subprocess.run(["ssh", host, cmd], capture_output=True)
 
 
-def local_tmux(cmd):
+def local_tmux(args):
     """Run tmux command locally."""
-    subprocess.run(["tmux"] + cmd.split(), capture_output=True)
+    subprocess.run(["tmux"] + args, capture_output=True)
 
 
 def send_and_wait(message, host, session, channel, local=False):
@@ -35,8 +35,8 @@ def send_and_wait(message, host, session, channel, local=False):
 
     if local:
         # Same-machine: direct tmux commands
-        local_tmux(f"send-keys -t {session} '{message}'")
-        local_tmux(f"send-keys -t {session} Enter")
+        local_tmux(["send-keys", "-t", session, message])
+        local_tmux(["send-keys", "-t", session, "Enter"])
     else:
         # Cross-machine: via SSH
         if not host:

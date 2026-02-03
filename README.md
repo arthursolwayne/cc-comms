@@ -17,18 +17,22 @@ Save this - both sender and receiver need the same channel.
 
 On the machine where the **receiving** Claude will run:
 
-**A. Create/edit `~/.claude/settings.local.json`:**
+**A. Add Stop hook to `~/.claude/settings.json`:**
 
 ```json
 {
   "hooks": {
-    "Stop": [{
-      "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "curl -s -d 'done' ntfy.sh/YOUR-CHANNEL-HERE"
-      }]
-    }]
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -s -d 'done' ntfy.sh/YOUR-CHANNEL-HERE"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
@@ -45,7 +49,7 @@ tmux send-keys -t receiver 'claude' Enter
 ### Step 3: Clone this repo on SENDER
 
 ```bash
-git clone https://github.com/arthursolwayne/cc-comms.git
+git clone https://github.com/derpyplops/cc-comms.git
 cd cc-comms
 pip install requests  # if not already installed
 ```
@@ -139,8 +143,9 @@ curl -s "ntfy.sh/YOUR-CHANNEL/raw?poll=1"
 
 **Sender hangs forever:**
 - Receiver's Stop hook not configured or wrong channel
-- Check `~/.claude/settings.local.json` on receiver
+- Check `~/.claude/settings.json` on receiver (NOT settings.local.json)
 - Verify channel names match exactly
+- Restart Claude after adding the hook
 
 **Message not received by Claude:**
 - Wrong tmux session name
