@@ -13,6 +13,7 @@ Receiver needs Stop hook configured - see README.md
 """
 
 import argparse
+import shlex
 import subprocess
 import sys
 import time
@@ -42,7 +43,8 @@ def send_and_wait(message, host, session, channel, local=False):
         if not host:
             print("Error: --host required for remote mode", file=sys.stderr)
             sys.exit(1)
-        ssh(host, f"tmux send-keys -t {session} '{message}'")
+        quoted_msg = shlex.quote(message)
+        ssh(host, f"tmux send-keys -t {session} {quoted_msg}")
         ssh(host, f"tmux send-keys -t {session} Enter")
 
     # Block on ntfy until response
