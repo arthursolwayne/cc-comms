@@ -49,7 +49,7 @@ tmux send-keys -t receiver 'claude' Enter
 ### Step 3: Clone this repo on SENDER
 
 ```bash
-git clone https://github.com/derpyplops/cc-comms.git
+git clone https://github.com/arthursolwayne/cc-comms.git
 cd cc-comms
 pip install requests  # if not already installed
 ```
