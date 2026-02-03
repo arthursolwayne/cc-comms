@@ -17,8 +17,15 @@ Save this - both sender and receiver need the same channel.
 
 On the machine where the **receiving** Claude will run:
 
-**A. Add Stop hook to `~/.claude/settings.json`:**
+**Option A: Use setup script (recommended)**
+```bash
+git clone https://github.com/arthursolwayne/cc-comms.git
+./cc-comms/setup-receiver.sh YOUR-CHANNEL
+```
 
+**Option B: Manual setup**
+
+Add to `~/.claude/settings.json`:
 ```json
 {
   "hooks": {
@@ -28,7 +35,7 @@ On the machine where the **receiving** Claude will run:
         "hooks": [
           {
             "type": "command",
-            "command": "curl -s -d 'done' ntfy.sh/YOUR-CHANNEL-HERE"
+            "command": "curl -s -d done ntfy.sh/YOUR-CHANNEL-HERE"
           }
         ]
       }
@@ -36,8 +43,6 @@ On the machine where the **receiving** Claude will run:
   }
 }
 ```
-
-Replace `YOUR-CHANNEL-HERE` with your channel from Step 1.
 
 **B. Start a tmux session and launch Claude:**
 
