@@ -1,6 +1,8 @@
 # cc-comms
 
-Synchronous Claude-to-Claude messaging via tmux + ntfy.sh.
+Synchronous Claude-to-Claude messaging via tmux + ntfy.
+
+Also supports **phone ↔ Claude** communication for mobile control.
 
 ## Setup (5 minutes)
 
@@ -230,9 +232,95 @@ Each sender/receiver pair needs a unique channel:
 | A → C | `cc-pair-ac` | `agent-c` |
 | B → C | `cc-pair-bc` | `agent-c` |
 
+## Phone Bridge (Mobile Control)
+
+Control Claude from your phone via ntfy app.
+
+### Setup
+
+1. **Install ntfy app** on iOS/Android and subscribe to your channel
+
+2. **Configure Claude hooks** in `~/.claude/settings.json`:
+```json
+{
+  "hooks": {
+    "Notification": [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": "curl -s -H 'Authorization: Bearer YOUR_TOKEN' -d '⏳ Needs input' https://your-ntfy-server/your-channel"
+      }]
+    }],
+    "Stop": [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": "MSG=$(./path/to/capture-response.sh); curl -s -H 'Authorization: Bearer YOUR_TOKEN' -d \"✓ $MSG\" https://your-ntfy-server/your-channel"
+      }]
+    }]
+  }
+}
+```
+
+3. **Run the phone bridge**:
+```bash
+./phone-bridge.py --session your-tmux-session
+```
+
+4. **Send messages from phone** → ntfy app → Claude processes → response sent back to phone
+
+### Files
+
+- `phone-bridge.py` - Listens for ntfy messages, forwards to tmux session
+- `capture-response.sh` - Extracts Claude's response text for notifications
+
+### Configuration
+
+Edit `phone-bridge.py` to set your session mappings:
+```python
+SESSION_MAP = {
+    "tetra": "accumulator-tetra-sender",
+    "john": "accumulator-john-receiver",
+}
+```
+
+Send `@tetra do something` from phone to target specific sessions.
+
+## Self-Hosted ntfy
+
+Default uses `https://ntfy.dealglass.com`. To use your own server or ntfy.sh:
+
+```bash
+# Environment variables
+export NTFY_SERVER="https://your-server.com"
+export NTFY_TOKEN="your-auth-token"
+
+# Or CLI flags
+./send.py --server https://your-server.com ...
+```
+
+For ntfy.sh (public, no auth needed):
+```bash
+export NTFY_SERVER="https://ntfy.sh"
+export NTFY_TOKEN=""
+```
+
+### capture-response.sh
+
+macOS (Homebrew):
+```bash
+/opt/homebrew/bin/tmux capture-pane ...
+```
+
+Linux - change to:
+```bash
+/usr/bin/tmux capture-pane ...
+```
+
 ## Dependencies
 
 - Python 3 + `requests` (`pip install requests`)
 - tmux
 - curl (on receiver)
 - SSH (for cross-machine only)
+- ntfy app (for phone bridge)
