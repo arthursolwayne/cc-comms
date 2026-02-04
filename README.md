@@ -71,6 +71,32 @@ pip install requests  # if not already installed
 ./send.py --host user@remote --session receiver --channel cc-7f3a2b1c "your message"
 ```
 
+## Critical: Channel Ownership
+
+**The channel belongs to the RECEIVER, not the sender.**
+
+The `--channel` argument in send.py specifies which ntfy channel to *listen on* for the receiver's "done" signal. This must match the channel configured in the *receiver's* Stop hook.
+
+Common mistake: Using your own machine's channel when talking to a remote receiver. Your channel is for others to talk TO you, not for you to talk to others.
+
+## Local vs Remote
+
+| Mode | Sender | Receiver | Setup Required |
+|------|--------|----------|----------------|
+| **Local-to-local** | Machine A | Machine A | Both share same `~/.claude/settings.json` - one channel works |
+| **Local-to-remote** | Machine A | Machine B | Receiver's settings.json must have Stop hook configured - verify via SSH first |
+
+**Before sending to a remote receiver, always verify:**
+```bash
+# 1. Check receiver has cc-comms configured
+ssh user@remote "grep ntfy ~/.claude/settings.json"
+
+# 2. If not configured, set it up first
+ssh user@remote "/path/to/setup-receiver.sh cc-NEWCHANNEL"
+ssh user@remote "tmux send-keys -t SESSION C-c"  # restart Claude to apply
+ssh user@remote "tmux send-keys -t SESSION 'claude' Enter"
+```
+
 ## How It Works
 
 ```
@@ -152,6 +178,12 @@ curl -s "ntfy.sh/YOUR-CHANNEL/raw?poll=1"
 - Verify channel names match exactly
 - Restart Claude after adding the hook
 
+**Using wrong channel (remote receivers):**
+- You used YOUR machine's channel instead of the RECEIVER's channel
+- Your channel (in your settings.json) is for others to send TO you
+- To send to a remote receiver, use THEIR channel: `ssh user@remote "grep ntfy ~/.claude/settings.json"`
+- If they don't have one, set it up first with `setup-receiver.sh`
+
 **Message not received by Claude:**
 - Wrong tmux session name
 - Claude not running in that session
@@ -163,6 +195,30 @@ curl -s "ntfy.sh/YOUR-CHANNEL/raw?poll=1"
 
 **Permission denied on send.py:**
 - Run: `chmod +x send.py`
+
+## Pre-flight Checklist (Remote)
+
+Before your first send to a remote receiver:
+
+```bash
+# 1. Verify SSH works
+ssh user@remote "echo ok"
+
+# 2. Check tmux session exists
+ssh user@remote "tmux list-sessions"
+
+# 3. Check if cc-comms is configured (look for ntfy in output)
+ssh user@remote "cat ~/.claude/settings.json"
+
+# 4. If no ntfy hook, configure it:
+ssh user@remote "git clone https://github.com/arthursolwayne/cc-comms.git /tmp/cc-comms 2>/dev/null; /tmp/cc-comms/setup-receiver.sh cc-YOURCHANNEL"
+
+# 5. Restart Claude to apply hook
+ssh user@remote "tmux send-keys -t SESSION C-c; sleep 2; tmux send-keys -t SESSION 'claude' Enter"
+
+# 6. Now send
+./send.py -H user@remote -s SESSION -c cc-YOURCHANNEL "your message"
+```
 
 ## Multiple Pairs
 
